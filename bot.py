@@ -7,12 +7,12 @@ from telegram.ext import (
     filters, ContextTypes
 )
 
-# 🔑 Tokens
+# 🔑 Tokens (Render env variables se aayenge)
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 REMOVE_BG_API_KEY = os.getenv("REMOVE_BG_API_KEY")
 
-# ✅ Required channel(s) (now supports 3 or more)
-FORCE_JOIN_CHANNELS = ["@plusbotz","@EarnMoneyTips_Official","@Budget_Deals_Bazaar"]
+# ✅ Required channel(s)
+FORCE_JOIN_CHANNELS = ["@plusbotz", "@EarnMoneyTips_Official", "@Budget_Deals_Bazaar"]
 
 # Logging
 logging.basicConfig(
@@ -39,20 +39,28 @@ async def is_user_member(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 async def send_force_join_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = []
 
-    # Dynamically create buttons for all channels
+    # Buttons for all channels
     for idx, channel in enumerate(FORCE_JOIN_CHANNELS, start=1):
         keyboard.append([InlineKeyboardButton(f"📢 Join Channel {idx}", url=f"https://t.me/{channel[1:]}")])
 
-    # Add Try Again button
+    # Try Again button
     keyboard.append([InlineKeyboardButton("🔄 Try Again", callback_data="try_again")])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(
-        "⚠️ You must join our channel(s) before using this bot.\n\n"
-        "✅ Join the channel(s) below and then click *Try Again*.",
-        reply_markup=reply_markup,
-        parse_mode="Markdown"
-    )
+    if update.message:
+        await update.message.reply_text(
+            "⚠️ You must join our channel(s) before using this bot.\n\n"
+            "✅ Join the channel(s) below and then click *Try Again*.",
+            reply_markup=reply_markup,
+            parse_mode="Markdown"
+        )
+    elif update.callback_query:
+        await update.callback_query.message.reply_text(
+            "⚠️ You must join our channel(s) before using this bot.\n\n"
+            "✅ Join the channel(s) below and then click *Try Again*.",
+            reply_markup=reply_markup,
+            parse_mode="Markdown"
+        )
 
 
 # --- Callback for "Try Again" ---
@@ -60,7 +68,6 @@ async def try_again_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
     query = update.callback_query
     await query.answer()
 
-    # Check membership again
     if await is_user_member(update, context):
         await query.edit_message_text("✅ You are now a member! Send your image again.")
     else:
@@ -86,16 +93,14 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # --- Handle image messages ---
 async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Process 1: Check membership
     if not await is_user_member(update, context):
         await send_force_join_message(update, context)
         return
 
     try:
-        # Process 2: Continue if user is in channel
         processing_msg = await update.message.reply_text("⏳ Processing your image, please wait...")
 
-        # Get the file
+        # Get photo
         photo = update.message.photo[-1]
         file = await photo.get_file()
         file_path = await file.download_to_drive("input.png")
