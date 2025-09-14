@@ -1,6 +1,7 @@
 import logging
 import os
 import requests
+import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application, CommandHandler, MessageHandler, CallbackQueryHandler,
@@ -132,7 +133,7 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # --- Main ---
-def main():
+async def main():
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
     # Commands
@@ -145,8 +146,8 @@ def main():
     # Images
     application.add_handler(MessageHandler(filters.PHOTO, handle_image))
 
-    application.run_polling()
+    await application.run_polling()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
