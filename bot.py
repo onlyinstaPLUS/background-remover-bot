@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 
 # --- Helper: Check if user is in required channels ---
 async def is_user_member(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    if not update.effective_user:  # safety check
+        return False
+
     user_id = update.effective_user.id
     for channel in FORCE_JOIN_CHANNELS:
         try:
