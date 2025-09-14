@@ -1,7 +1,6 @@
 import logging
 import os
 import requests
-import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application, CommandHandler, MessageHandler, CallbackQueryHandler,
@@ -48,20 +47,15 @@ async def send_force_join_message(update: Update, context: ContextTypes.DEFAULT_
     keyboard.append([InlineKeyboardButton("🔄 Try Again", callback_data="try_again")])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
+    text = (
+        "⚠️ You must join our channel(s) before using this bot.\n\n"
+        "✅ Join the channel(s) below and then click *Try Again*."
+    )
+
     if update.message:
-        await update.message.reply_text(
-            "⚠️ You must join our channel(s) before using this bot.\n\n"
-            "✅ Join the channel(s) below and then click *Try Again*.",
-            reply_markup=reply_markup,
-            parse_mode="Markdown"
-        )
+        await update.message.reply_text(text, reply_markup=reply_markup, parse_mode="Markdown")
     elif update.callback_query:
-        await update.callback_query.message.reply_text(
-            "⚠️ You must join our channel(s) before using this bot.\n\n"
-            "✅ Join the channel(s) below and then click *Try Again*.",
-            reply_markup=reply_markup,
-            parse_mode="Markdown"
-        )
+        await update.callback_query.message.reply_text(text, reply_markup=reply_markup, parse_mode="Markdown")
 
 
 # --- Callback for "Try Again" ---
@@ -133,7 +127,7 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # --- Main ---
-async def main():
+def main():
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
     # Commands
@@ -146,8 +140,9 @@ async def main():
     # Images
     application.add_handler(MessageHandler(filters.PHOTO, handle_image))
 
-    await application.run_polling()
+    # ✅ run_polling async khud handle karta hai
+    application.run_polling()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
